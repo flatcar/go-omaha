@@ -18,7 +18,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/coreos/go-omaha/omaha"
+	"github.com/kinvolk/go-omaha/omaha"
 )
 
 var (

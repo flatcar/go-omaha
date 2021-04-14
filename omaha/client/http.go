@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/coreos/go-omaha/omaha"
+	"github.com/kinvolk/go-omaha/omaha"
 )
 
 const (

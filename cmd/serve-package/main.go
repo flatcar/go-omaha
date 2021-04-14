@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/coreos/go-omaha/omaha"
+	"github.com/kinvolk/go-omaha/omaha"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/coreos/go-omaha
+module github.com/kinvolk/go-omaha
 
 go 1.15
 
