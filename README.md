@@ -1,32 +1,32 @@
 # Go Omaha
 
 ![Go](https://github.com/kinvolk/go-omaha/workflows/Go/badge.svg)
-[![GoDoc](https://godoc.org/github.com/coreos/go-omaha/omaha?status.svg)](https://godoc.org/github.com/coreos/go-omaha/omaha)
+[![GoDoc](https://godoc.org/github.com/kinvolk/go-omaha/omaha?status.svg)](https://godoc.org/github.com/kinvolk/go-omaha/omaha)
 
 Implementation of the [omaha update protocol](https://github.com/google/omaha) in Go.
 
 ## Status
 
-This code is targeted for use with CoreOS's [CoreUpdate](https://coreos.com/products/coreupdate/) product and the Container Linux [update_engine](https://github.com/coreos/update_engine).
+This code is targeted for use with Kinvolk's [Nebraska](https://github.com/kinvolk/nebraska) project and the Container Linux [update_engine](https://github.com/kinvolk/update_engine).
 As a result this is not a complete implementation of the [protocol](https://github.com/google/omaha/blob/master/doc/ServerProtocolV3.md) and inherits a number of quirks from update_engine.
 These differences include:
 
- - No offline activity tracking.
+- No offline activity tracking.
    The protocol's ping mechanism allows for tracking application usage, reporting the number of days since the last ping and how many of those days saw active usage.
-   CoreUpdate does not use this, instead assuming update clients are always online and checking in once every ~45-50 minutes.
-   Clients not actively updating should send only a ping, indicating CoreUpdate's "Instance-Hold" state.
-   Clients requesting an update should send a ping, update check, and an UpdateComplete:SuccessReboot event indicating CoreUpdate's "Complete" state.
+   Nebraska does not use this, instead assuming update clients are always online and checking in once every ~45-50 minutes.
+   Clients not actively updating should send only a ping, indicating Nebraska's "Instance-Hold" state.
+   Clients requesting an update should send a ping, update check, and an UpdateComplete:SuccessReboot event indicating Nebraska's "Complete" state.
 
- - Various protocol extensions/abuses.
+- Various protocol extensions/abuses.
    update_engine, likely due to earlier limitations of the protocol and Google's server implementation, uses a number of non-standard fields.
    For example, packing a lot of extra attributes such as the package's SHA-256 hash into a "postinstall" action.
    As much as possible the code includes comments about these extensions.
 
- - Many data fields not used by CoreUpdate are omitted.
- 
+- Many data fields not used by Nebraska are omitted.
+
 ## `serve-package`
 
-This project includes a very simple program designed to serve a single Container Linux package on the local host. It is intended to be used as a manual updater for a machine that is not able to use a full-fledged CoreUpdate instance. Binaries are available for each released version on the [releases page](https://github.com/coreos/go-omaha/releases). `serve-package` can also be built from source using the provided Makefile:
+This project includes a very simple program designed to serve a single Container Linux package on the local host. It is intended to be used as a manual updater for a machine that is not able to use a full-fledged Nebraska instance. Binaries are available for each released version on the [releases page](https://github.com/kinvolk/go-omaha/releases). `serve-package` can also be built from source using the provided Makefile:
 
 ```bash
 make
@@ -34,13 +34,13 @@ make
 
 The binary will be available in the `bin/` folder.
 
-It is recommended that the server be run directly on the machine you intend to update. Go to the [Container Linux release notes](https://coreos.com/releases/) and find the version number for the release you would like to update to. The update payload can be retrieved from
+It is recommended that the server be run directly on the machine you intend to update. Go to the [Container Linux release notes](https://kinvolk.io/flatcar-container-linux/releases/) and find the version number for the release you would like to update to. The update payload can be retrieved from
 
-```
-https://update.release.core-os.net/amd64-usr/<version>/update.gz
+```html
+https://update.release.flatcar-linux.net/amd64-usr/<version>/flatcar_production_update.gz
 ```
 
-where `<version>` is the version number you retrieved from the releases page. For example, `https://update.release.core-os.net/amd64-usr/1576.4.0/update.gz` is the payload required to update to Container Linux version 1576.4.0.
+where `<version>` is the version number you retrieved from the releases page. For example, `https://update.release.flatcar-linux.net/amd64-usr/2823.0.0/flatcar_production_update.gz` is the payload required to update to Container Linux version 1576.4.0.
 
 Copy the update payload and the `serve-package` binary to the server you would like to update. `serve-package` can be run as follows:
 
@@ -53,7 +53,7 @@ By default, the server listens on `localhost:8000`. This can be modified using t
 Next, `update_engine` needs to be configured to use the local server that was just set up:
 
 ```bash
-echo "SERVER=http://localhost:8000/v1/update" | sudo tee -a /etc/coreos/update.conf
+echo "SERVER=http://localhost:8000/v1/update" | sudo tee -a /etc/flatcar/update.conf
 ```
 
 Restart `update_engine` and tell it to check for an update:
