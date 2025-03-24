@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kinvolk/go-omaha/omaha"
+	"github.com/flatcar/go-omaha/omaha"
 )
 
 const (
