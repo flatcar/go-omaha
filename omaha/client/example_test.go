@@ -21,7 +21,7 @@ import (
 	//"os/signal"
 	"syscall"
 
-	"github.com/kinvolk/go-omaha/omaha"
+	"github.com/flatcar/go-omaha/omaha"
 )
 
 func Example() {

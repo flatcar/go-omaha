@@ -18,7 +18,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/kinvolk/go-omaha/omaha"
+	"github.com/flatcar/go-omaha/omaha"
 )
 
 var (
@@ -46,7 +46,7 @@ var (
 type ExitCode int
 
 // These error codes are from CoreOS Container Linux update_engine 0.4.x
-// https://github.com/kinvolk/update_engine/blob/master/src/update_engine/action_processor.h
+// https://github.com/flatcar/update_engine/blob/master/src/update_engine/action_processor.h
 // The whole list is included for the sake of completeness but lots of these
 // are not generally applicable and not even used by update_engine any more.
 // Also there are clearly duplicate errors for the same condition.

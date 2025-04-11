@@ -23,7 +23,7 @@ import (
 
 	uuid "github.com/google/uuid"
 
-	"github.com/kinvolk/go-omaha/omaha"
+	"github.com/flatcar/go-omaha/omaha"
 )
 
 const (

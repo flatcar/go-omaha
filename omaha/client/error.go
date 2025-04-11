@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kinvolk/go-omaha/omaha"
+	"github.com/flatcar/go-omaha/omaha"
 )
 
 var (

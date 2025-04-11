@@ -11,14 +11,14 @@
 
 # Go Omaha
 
-![Go](https://github.com/kinvolk/go-omaha/workflows/Go/badge.svg)
-[![GoDoc](https://godoc.org/github.com/kinvolk/go-omaha/omaha?status.svg)](https://godoc.org/github.com/kinvolk/go-omaha/omaha)
+![Go](https://github.com/flatcar/go-omaha/workflows/Go/badge.svg)
+[![GoDoc](https://godoc.org/github.com/flatcar/go-omaha/omaha?status.svg)](https://godoc.org/github.com/flatcar/go-omaha/omaha)
 
 Implementation of the [omaha update protocol](https://github.com/google/omaha) in Go.
 
 ## Status
 
-This code is targeted for use with Kinvolk's [Nebraska](https://github.com/kinvolk/nebraska) project and the Container Linux [update_engine](https://github.com/kinvolk/update_engine).
+This code is targeted for use with Flatcar's [Nebraska](https://github.com/flatcar/nebraska) project and the Container Linux [update_engine](https://github.com/flatcar/update_engine).
 As a result this is not a complete implementation of the [protocol](https://github.com/google/omaha/blob/master/doc/ServerProtocolV3.md) and inherits a number of quirks from update_engine.
 These differences include:
 
@@ -37,7 +37,7 @@ These differences include:
 
 ## `serve-package`
 
-This project includes a very simple program designed to serve a single Container Linux package on the local host. It is intended to be used as a manual updater for a machine that is not able to use a full-fledged Nebraska instance. Binaries are available for each released version on the [releases page](https://github.com/kinvolk/go-omaha/releases). `serve-package` can also be built from source using the provided Makefile:
+This project includes a very simple program designed to serve a single Container Linux package on the local host. It is intended to be used as a manual updater for a machine that is not able to use a full-fledged Nebraska instance. Binaries are available for each released version on the [releases page](https://github.com/flatcar/go-omaha/releases). `serve-package` can also be built from source using the provided Makefile:
 
 ```bash
 make
@@ -45,7 +45,7 @@ make
 
 The binary will be available in the `bin/` folder.
 
-It is recommended that the server be run directly on the machine you intend to update. Go to the [Container Linux release notes](https://kinvolk.io/flatcar-container-linux/releases/) and find the version number for the release you would like to update to. The update payload can be retrieved from
+It is recommended that the server be run directly on the machine you intend to update. Go to the [Container Linux release notes](https://flatcar.org/releases) and find the version number for the release you would like to update to. The update payload can be retrieved from
 
 ```html
 https://update.release.flatcar-linux.net/amd64-usr/<version>/flatcar_production_update.gz
@@ -86,8 +86,8 @@ sudo systemctl reboot
 
 ### Issues
 
-Please report any issues in the [Flatcar repo](https://github.com/kinvolk/flatcar/issues).
+Please report any issues in the [flatcar/Flatcar repo](https://github.com/flatcar/Flatcar/issues).
 
 ### Code of Conduct
 
-Please refer to the [Kinvolk Code of Conduct](https://github.com/kinvolk/contribution/blob/master/CODE_OF_CONDUCT.md).
+Please refer to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md).

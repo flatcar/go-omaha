@@ -1,4 +1,4 @@
-module github.com/kinvolk/go-omaha
+module github.com/flatcar/go-omaha
 
 go 1.15
 
