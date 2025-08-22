@@ -130,8 +130,8 @@ func TestClientWithUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if update.Manifest.Version != "1.1.1" {
-		t.Fatalf("expected version 1.1.1, not %s", update.Manifest.Version)
+	if len(update.Manifests) == 0 || update.Manifests[0].Version != "1.1.1" {
+		t.Fatalf("expected version 1.1.1, got %v", update.Manifests)
 	}
 
 	if len(r.pings) != 1 {

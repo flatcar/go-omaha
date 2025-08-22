@@ -88,7 +88,7 @@ func Example() {
 	})
 
 	// Restart, new application is now running.
-	c.SetVersion(update.Manifest.Version)
+	c.SetVersion(update.Manifests[0].Version)
 	c.Event(&omaha.EventRequest{
 		Type:   omaha.EventTypeUpdateComplete,
 		Result: omaha.EventResultSuccessReboot,

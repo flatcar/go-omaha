@@ -118,13 +118,14 @@ func TestTrivialServer(t *testing.T) {
 		resp.Apps[0].UpdateCheck == nil ||
 		resp.Apps[0].UpdateCheck.Status != UpdateOK ||
 		len(resp.Apps[0].UpdateCheck.URLs) != 1 ||
-		resp.Apps[0].UpdateCheck.Manifest == nil ||
-		len(resp.Apps[0].UpdateCheck.Manifest.Packages) != 1 {
+		len(resp.Apps[0].UpdateCheck.Manifests) != 1 ||
+		resp.Apps[0].UpdateCheck.Manifests[0] == nil ||
+		len(resp.Apps[0].UpdateCheck.Manifests[0].Packages) != 1 {
 		t.Fatalf("unexpected response: %#v", resp)
 	}
 
 	pkgres, err := http.Get(resp.Apps[0].UpdateCheck.URLs[0].CodeBase +
-		resp.Apps[0].UpdateCheck.Manifest.Packages[0].Name)
+		resp.Apps[0].UpdateCheck.Manifests[0].Packages[0].Name)
 	if err != nil {
 		t.Fatal(err)
 	}

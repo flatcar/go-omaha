@@ -112,6 +112,9 @@ type AppRequest struct {
 	MachineID    string `xml:"machineid,attr,omitempty"`
 	OEM          string `xml:"oem,attr,omitempty"`
 	OEMVersion   string `xml:"oemversion,attr,omitempty"`
+	
+	// multi-manifest update extension
+	MultiManifestOK bool `xml:"multi_manifest_ok,attr,omitempty"`
 }
 
 func (a *AppRequest) AddUpdateCheck() *UpdateRequest {
@@ -225,9 +228,9 @@ func (a *AppResponse) AddEvent() *EventResponse {
 }
 
 type UpdateResponse struct {
-	URLs     []*URL       `xml:"urls>url" json:",omitempty"`
-	Manifest *Manifest    `xml:"manifest"`
-	Status   UpdateStatus `xml:"status,attr,omitempty"`
+	URLs      []*URL       `xml:"urls>url" json:",omitempty"`
+	Manifests []*Manifest  `xml:"manifest" json:",omitempty"`
+	Status    UpdateStatus `xml:"status,attr,omitempty"`
 }
 
 func (u *UpdateResponse) AddURL(codebase string) *URL {
@@ -237,8 +240,9 @@ func (u *UpdateResponse) AddURL(codebase string) *URL {
 }
 
 func (u *UpdateResponse) AddManifest(version string) *Manifest {
-	u.Manifest = &Manifest{Version: version}
-	return u.Manifest
+	m := &Manifest{Version: version}
+	u.Manifests = append(u.Manifests, m)
+	return m
 }
 
 type PingResponse struct {
@@ -264,6 +268,11 @@ type Manifest struct {
 	Packages []*Package `xml:"packages>package"`
 	Actions  []*Action  `xml:"actions>action"`
 	Version  string     `xml:"version,attr"`
+	
+	// multi-step update extensions
+	IsFloor     bool   `xml:"is_floor,attr,omitempty"`
+	FloorReason string `xml:"floor_reason,attr,omitempty"`
+	IsTarget    bool   `xml:"is_target,attr,omitempty"`
 }
 
 func (m *Manifest) AddPackage() *Package {
