@@ -123,5 +123,5 @@ func (o *OmahaHandler) checkUpdate(appResp *AppResponse, httpReq *http.Request, 
 
 func fillUpdate(u *UpdateResponse, update *Update, httpReq *http.Request) {
 	u.URLs = update.URLs([]string{"http://" + httpReq.Host})
-	u.Manifest = &update.Manifest
+	u.Manifests = []*Manifest{&update.Manifest}
 }

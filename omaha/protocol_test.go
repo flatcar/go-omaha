@@ -130,7 +130,7 @@ func TestOmahaResponseWithUpdate(t *testing.T) {
 				URLs: []*URL{&URL{
 					CodeBase: "http://kam:8080/static/",
 				}},
-				Manifest: &Manifest{
+				Manifests: []*Manifest{&Manifest{
 					Version: "9999.0.0",
 					Packages: []*Package{&Package{
 						SHA1:     "+LXvjiaPkeYDLHoNKlf9qbJwvnk=",
@@ -144,7 +144,7 @@ func TestOmahaResponseWithUpdate(t *testing.T) {
 						SHA256:         "0VAlQW3RE99SGtSB5R4m08antAHO8XDoBMKDyxQT/Mg=",
 						IsDeltaPayload: true,
 					}},
-				},
+				}},
 			},
 		}},
 	}
@@ -248,4 +248,201 @@ func ExampleNewRequest() {
 	//   <event eventtype="1" eventresult="0"></event>
 	//  </app>
 	// </request>
+}
+
+func TestMultiManifestParsing(t *testing.T) {
+	// Test XML with multiple manifest elements
+	const multiManifestXML = `<?xml version="1.0" encoding="UTF-8"?>
+<response protocol="3.0">
+<daystart elapsed_seconds="0"/>
+<app appid="{e96281a6-d1af-4bde-9a0a-97b76e56dc57}" status="ok">
+<updatecheck status="ok">
+<urls>
+<url codebase="https://update.release.flatcar-linux.net/amd64-usr/"/>
+</urls>
+<manifest version="1.5.0" is_floor="true" floor_reason="Required for partition migration">
+<packages>
+<package name="flatcar_production_update.gz" hash="hash1" size="536373876" required="true"/>
+</packages>
+<actions>
+<action event="postinstall" sha256="sha256_1_5_0"/>
+</actions>
+</manifest>
+<manifest version="2.0.0" is_floor="true" floor_reason="Bootloader update required">
+<packages>
+<package name="flatcar_production_update.gz" hash="hash2" size="538373876" required="true"/>
+</packages>
+<actions>
+<action event="postinstall" sha256="sha256_2_0_0"/>
+</actions>
+</manifest>
+<manifest version="4.0.0" is_target="true">
+<packages>
+<package name="flatcar_production_update.gz" hash="hash3" size="542373876" required="true"/>
+</packages>
+<actions>
+<action event="postinstall" sha256="sha256_4_0_0"/>
+</actions>
+</manifest>
+</updatecheck>
+</app>
+</response>`
+
+	resp, err := ParseResponse("", strings.NewReader(multiManifestXML))
+	if err != nil {
+		t.Fatalf("ParseResponse failed: %v", err)
+	}
+
+	uc := resp.Apps[0].UpdateCheck
+	if uc == nil {
+		t.Fatal("UpdateCheck is nil")
+	}
+
+	if len(uc.Manifests) != 3 {
+		t.Fatalf("Manifests count: want 3, got %d", len(uc.Manifests))
+	}
+
+	// Verify floor manifests
+	if !uc.Manifests[0].IsFloor || uc.Manifests[0].Version != "1.5.0" {
+		t.Error("First manifest should be floor version 1.5.0")
+	}
+	if uc.Manifests[0].FloorReason != "Required for partition migration" {
+		t.Errorf("Floor reason: want 'Required for partition migration', got %q", uc.Manifests[0].FloorReason)
+	}
+
+	if !uc.Manifests[1].IsFloor || uc.Manifests[1].Version != "2.0.0" {
+		t.Error("Second manifest should be floor version 2.0.0")
+	}
+
+	// Verify target manifest
+	if !uc.Manifests[2].IsTarget || uc.Manifests[2].Version != "4.0.0" {
+		t.Error("Third manifest should be target version 4.0.0")
+	}
+	if uc.Manifests[2].IsFloor {
+		t.Error("Target manifest should not be marked as floor")
+	}
+}
+
+func TestSingleManifestParsing(t *testing.T) {
+	// Test that single manifest responses still parse correctly
+	const singleManifestXML = `<?xml version="1.0" encoding="UTF-8"?>
+<response protocol="3.0">
+<daystart elapsed_seconds="0"/>
+<app appid="{e96281a6-d1af-4bde-9a0a-97b76e56dc57}" status="ok">
+<updatecheck status="ok">
+<urls>
+<url codebase="https://update.release.flatcar-linux.net/amd64-usr/"/>
+</urls>
+<manifest version="3.0.0">
+<packages>
+<package name="flatcar_production_update.gz" hash="hash3" size="542373876" required="true"/>
+</packages>
+<actions>
+<action event="postinstall" sha256="sha256_3_0_0"/>
+</actions>
+</manifest>
+</updatecheck>
+</app>
+</response>`
+
+	resp, err := ParseResponse("", strings.NewReader(singleManifestXML))
+	if err != nil {
+		t.Fatalf("ParseResponse failed: %v", err)
+	}
+
+	uc := resp.Apps[0].UpdateCheck
+	if uc == nil {
+		t.Fatal("UpdateCheck is nil")
+	}
+
+	if len(uc.Manifests) != 1 {
+		t.Fatalf("Manifests count: want 1, got %d", len(uc.Manifests))
+	}
+
+	if uc.Manifests[0].Version != "3.0.0" {
+		t.Errorf("Manifest version: want '3.0.0', got %q", uc.Manifests[0].Version)
+	}
+}
+
+func TestMultiManifestOKMarshaling(t *testing.T) {
+	req := NewRequest()
+	app := req.AddApp("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", "1.0.0")
+	app.MultiManifestOK = true
+	app.AddUpdateCheck()
+
+	data, err := xml.Marshal(req)
+	if err != nil {
+		t.Fatalf("xml.Marshal failed: %v", err)
+	}
+
+	// Verify attribute is present
+	if !strings.Contains(string(data), `multi_manifest_ok="true"`) {
+		t.Error("multi_manifest_ok attribute missing in marshaled XML")
+	}
+
+	// Round-trip test
+	parsed, err := ParseRequest("", strings.NewReader(string(data)))
+	if err != nil {
+		t.Fatalf("ParseRequest failed: %v", err)
+	}
+
+	if !parsed.Apps[0].MultiManifestOK {
+		t.Error("MultiManifestOK not preserved in round-trip")
+	}
+}
+
+func TestMultiManifestMarshaling(t *testing.T) {
+	resp := NewResponse()
+	app := resp.AddApp("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", "ok")
+	uc := app.AddUpdateCheck(UpdateOK)
+	uc.AddURL("https://update.release.flatcar-linux.net/amd64-usr/")
+	
+	// Add multiple manifests
+	m1 := uc.AddManifest("1.5.0")
+	m1.IsFloor = true
+	m1.FloorReason = "Required for partition migration"
+	pkg1 := m1.AddPackage()
+	pkg1.Name = "flatcar_production_update.gz"
+	pkg1.SHA1 = "hash1"
+	pkg1.Size = 536373876
+	pkg1.Required = true
+	
+	m2 := uc.AddManifest("2.0.0")
+	m2.IsFloor = true
+	m2.FloorReason = "Bootloader update required"
+	pkg2 := m2.AddPackage()
+	pkg2.Name = "flatcar_production_update.gz"
+	pkg2.SHA1 = "hash2"
+	pkg2.Size = 538373876
+	pkg2.Required = true
+	
+	m3 := uc.AddManifest("4.0.0")
+	m3.IsTarget = true
+	pkg3 := m3.AddPackage()
+	pkg3.Name = "flatcar_production_update.gz"
+	pkg3.SHA1 = "hash3"
+	pkg3.Size = 542373876
+	pkg3.Required = true
+	
+	data, err := xml.Marshal(resp)
+	if err != nil {
+		t.Fatalf("xml.Marshal failed: %v", err)
+	}
+	
+	// Verify multiple manifest elements are present
+	xmlStr := string(data)
+	if strings.Count(xmlStr, "<manifest") != 3 {
+		t.Errorf("Expected 3 manifest elements, got: %s", xmlStr)
+	}
+	
+	// Verify floor attributes
+	if !strings.Contains(xmlStr, `is_floor="true"`) {
+		t.Error("is_floor attribute missing")
+	}
+	if !strings.Contains(xmlStr, `floor_reason="Required for partition migration"`) {
+		t.Error("floor_reason attribute missing")
+	}
+	if !strings.Contains(xmlStr, `is_target="true"`) {
+		t.Error("is_target attribute missing")
+	}
 }
