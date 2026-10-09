@@ -37,6 +37,7 @@ type Package struct {
 	Size     uint64    `xml:"size,attr"`
 	Required bool      `xml:"required,attr"`
 	Metadata *Metadata `xml:"metadata,omitempty"`
+	Labels   *Labels   `xml:"labels,omitempty"`
 }
 
 func (p *Package) FromPath(name string) error {
@@ -123,4 +124,41 @@ func (p *Package) AddMetadata(content string, contentType string) *Metadata {
 type Metadata struct {
 	ContentType string `xml:"content-type,attr,omitempty"`
 	Content     string `xml:",cdata"`
+}
+
+// AddLabel adds a key/value label to the package. Labels are an extension
+// to the omaha protocol, so only clients that are aware of them will read
+// them. Others ignore the element.
+func (p *Package) AddLabel(key, value string) *Label {
+	if p.Labels == nil {
+		p.Labels = &Labels{}
+	}
+	l := &Label{Key: key, Value: value}
+	p.Labels.Labels = append(p.Labels.Labels, l)
+	return l
+}
+
+// Labels holds the key/value labels of a package. It is a pointer in
+// Package so that a package without labels has no labels element at all.
+type Labels struct {
+	Labels []*Label `xml:"label"`
+}
+
+// Get returns the value of the first label with the given key.
+func (l *Labels) Get(key string) (string, bool) {
+	if l == nil {
+		return "", false
+	}
+	for _, label := range l.Labels {
+		if label.Key == key {
+			return label.Value, true
+		}
+	}
+	return "", false
+}
+
+// Label is a single key/value pair, sent as a label element.
+type Label struct {
+	Key   string `xml:"key,attr"`
+	Value string `xml:"value,attr"`
 }
