@@ -22,6 +22,7 @@ import (
 
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPackageFromPath(t *testing.T) {
@@ -168,4 +169,39 @@ func TestPackageWithMetadata(t *testing.T) {
 	err := xml.Unmarshal(xmlPkg, &newPkg)
 	assert.NoError(t, err)
 	assert.Equal(t, p.Metadata.Content, newPkg.Metadata.Content)
+}
+
+func TestPackageWithLabels(t *testing.T) {
+	p := Package{Name: "os.img", Size: 10, Required: true}
+	p.AddLabel("image.metadata.sha384", "0a1b2c")
+	p.AddLabel("note", "<a href=\"x\">&'\t\n\r]]>é😀")
+
+	out, err := xml.Marshal(&p)
+	require.NoError(t, err)
+	assert.Equal(t, `<Package name="os.img" size="10" required="true"><labels>`+
+		`<label key="image.metadata.sha384" value="0a1b2c"></label>`+
+		`<label key="note" value="&lt;a href=&#34;x&#34;&gt;&amp;&#39;&#x9;&#xA;&#xD;]]&gt;é😀"></label>`+
+		`</labels></Package>`, string(out))
+
+	var parsed Package
+	require.NoError(t, xml.Unmarshal(out, &parsed))
+	assert.Equal(t, p.Labels, parsed.Labels)
+
+	value, ok := parsed.Labels.Get("note")
+	assert.True(t, ok)
+	assert.Equal(t, "<a href=\"x\">&'\t\n\r]]>é😀", value)
+	_, ok = parsed.Labels.Get("missing")
+	assert.False(t, ok)
+}
+
+func TestPackageWithoutLabels(t *testing.T) {
+	out, err := xml.Marshal(&Package{Name: "os.img"})
+	require.NoError(t, err)
+	assert.NotContains(t, string(out), "labels")
+
+	var parsed Package
+	require.NoError(t, xml.Unmarshal(out, &parsed))
+	assert.Nil(t, parsed.Labels)
+	_, ok := parsed.Labels.Get("any")
+	assert.False(t, ok)
 }
